@@ -9,6 +9,7 @@
       "merchant",
       "magento"
     ],
+    "minimum-stability":"dev",
     "homepage": "https://jeeb.io",
     "license": "MIT",
     "authors": [
