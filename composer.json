@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "coingate/coingate-php": "3.*"
+        "jeeb/jeeb-php": "*"
     },
     "autoload": {
         "files": [ "registration.php" ],

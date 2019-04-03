@@ -123,7 +123,7 @@ class Payment extends AbstractMethod
         $signature       = $this->getConfigData('api_key'); // Signature
         $baseCur         = $this->getConfigData('baseCur');
         $lang            = $this->getConfigData('lang');
-        $notification    = ($this->urlBuilder->getUrl('jeeb/payment/callback');  // Notification Url
+        $notification    = $this->urlBuilder->getUrl('jeeb/payment/callback');  // Notification Url
         $order_total     = number_format($order->getGrandTotal(), 2, '.', '');
         $target_cur      = $this->getConfigData('targetCur');
 
