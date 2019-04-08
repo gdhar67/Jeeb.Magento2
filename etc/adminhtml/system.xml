@@ -31,23 +31,28 @@
                 <field id="sandbox_mode" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Sandbox Mode</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>Please note, that for Sandbox mode you must get separate API credentials on jeeb.io. API credentials generated on jeeb.io(Production environment) will not work for Sandbox mode.</comment>
+                    <comment>Please note, that for Sandbox mode you must get separate API key on jeeb.io. API credentials generated on jeeb.io(Production environment) will not work for Sandbox mode.</comment>
                 </field>
-                <field id="baseCur" translate="label" type="radio" default="btc">
+                <field id="baseCur" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Base Currency</label>
+                    <source_model>Jeeb\Merchant\Model\Source\Receivecurrencies</source_model>
+                    <comment>You should select the same currency as your store's currency.</comment>
+                </field>
+                <!-- <field id="baseCur" translate="label" type="radio" default="btc">
                     <option value="btc">BTC</option>
                     <option value="eur">EUR</option>
                     <option value="irr">IRR</option>
                     <option value="usd">USD</option>
                     <label>Base Currency</label>
-                </field>
-                <field id="targetCur" translate="label" type="text" default="btc/test-btc" required="required"/>
+                </field> -->
+                <field id="targetCur" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0" >
                 <label>Target Currency</label>
                 <comment>Options = [btc,bch,eth,ltc,xmr,xrp,test-btc] (Use '/' to enter more than 1 option). Eg: For selecting eth,ltc and xrp use 'eth/ltc/xrp'</comment>
-                <field id="lang" translate="label" type="radio" default="none" >
-                    <option value="none">Auto-Select</option>
-                    <option value="en">English</option>
-                    <option value="fa">Persian</option>
+                </field>
+                <field id="lang" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0" >
                     <label>Language</label>
+                    <source_model>Jeeb\Merchant\Model\Source\Receivelanguage</source_model>
+                    <comment>Select the language of the payment portal of Jeeb.</comment>
                 </field>
 
             </group>

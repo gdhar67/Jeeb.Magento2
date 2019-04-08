@@ -10,7 +10,7 @@
  */
 namespace Jeeb\Merchant\Model\Source;
 
-class Receivecurrencies
+class Receivelanguage
 {
     /**
      * @return array
@@ -18,10 +18,8 @@ class Receivecurrencies
      public function toOptionArray()
      {
          return array(
-            array('value' => 'btc', 'label' => 'Bitcoin'),
-            array('value' => 'eur', 'label' => 'Euros'),
-            array('value' => 'irr', 'label' => 'Iranian Rial'),
-            array('value' => 'toman', 'label' => 'Toman'),
-            array('value' => 'usd', 'label' => 'US Dollars')
+            array('value' => 'none', 'label' => 'Auo-Select'),
+            array('value' => 'en', 'label' => 'English'),
+            array('value' => 'fa', 'label' => 'Persian')
          );
      }}

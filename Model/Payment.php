@@ -122,13 +122,21 @@ class Payment extends AbstractMethod
         $baseUri         = "https://core.jeeb.io/api/" ;
         $signature       = $this->getConfigData('api_key'); // Signature
         $baseCur         = $this->getConfigData('baseCur');
-        $lang            = $this->getConfigData('lang');
+        $lang            = $this->getConfigData('lang') =="none"? NULL : $this->getConfigData('lang');
         $notification    = $this->urlBuilder->getUrl('jeeb/payment/callback');  // Notification Url
         $order_total     = number_format($order->getGrandTotal(), 2, '.', '');
         $target_cur      = $this->getConfigData('targetCur');
+        $callBack        = $this->urlBuilder->getUrl('checkout/onepage/success');
 
-        error_log("Base Uri : ".$baseUri." Signature : ".$signature." CallbackUri : ".$callBack." NotificationUri : ".$notification);
-        error_log("Cost = ". $total);
+        if($baseCur=='toman'){
+          $baseCur='irr';
+          $order_total *= 10;
+        }
+
+        // error_log("Base Uri : ".$baseUri." Signature : ".$signature." CallbackUri : ".$callBack." NotificationUri : ".$notification);
+        // error_log("Cost = ". $total);
+        \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info("Base Uri : ".$baseUri." Signature : ".$signature." CallbackUri : ".$callBack." NotificationUri : ".$notification." OrderTotal :".$order_total);
+
 
         $amount = convertIrrToBtc($baseUri, $order_total, $signature, $baseCur);
 
@@ -143,9 +151,19 @@ class Payment extends AbstractMethod
           "language"         => $lang
         );
 
+        \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($params, TRUE));
+
         $token = createInvoice($baseUri, $amount, $params, $signature);
 
-        redirectPayment($baseUri, $token);
+        // return $token;
+
+        // redirectPayment($baseUri, $token);
+
+        return array(
+                'status' => true,
+                'payment_url' => $baseUri."payments/invoice?token=".$token,
+                // 'token' => $token
+            );
 
         // $params = array(
         //     'order_id' => $order->getIncrementId(),
@@ -162,10 +180,11 @@ class Payment extends AbstractMethod
         // $cgOrder = \Jeeb\Merchant\Order::create($params);
         //
         // if ($cgOrder) {
-        //     return array(
-        //         'status' => true,
-        //         'payment_url' => $cgOrder->payment_url
-        //     );
+            // return array(
+            //     'status' => true,
+            //     'payment_url' => $baseUri."payments/invoice",
+            //     'token' => $token
+            // );
         // } else {
         //     return array(
         //         'status' => false
@@ -178,20 +197,17 @@ class Payment extends AbstractMethod
      */
      public function validateJeebCallback(Order $order)
      {
+       \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Entered Jeeb-Notification');
+
          $postdata = file_get_contents("php://input");
          $json = json_decode($postdata, true);
          if($json['signature']==$this->getConfigData('api_key')){
-           error_log("Entered Jeeb-Notification");
-           error_log("Response =>". var_export($json, TRUE));
-           if($json['orderNo']){
-             error_log("hey".$json['orderNo']);
-
-             $orderNo = $json['orderNo'];
 
              // Call Jeeb
              $network_uri = "https://core.jeeb.io/api/";
 
              if ( $json['stateId']== 2 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $order
                    ->setState(Order::STATE_PENDING, TRUE)
                    ->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_PENDING))
@@ -199,20 +215,22 @@ class Payment extends AbstractMethod
 
              }
              else if ( $json['stateId']== 3 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $order->setState(Order::STATE_PROCESSING);
                $order->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_PROCESSING));
                $order->save();
 
              }
              else if ( $json['stateId']== 4 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $data = array(
-                 "token" => $json["token"]
+                 "token" => $json['token']
                );
 
                $data_string = json_encode($data);
-               $api_key = Configuration::get('jeeb_APIKEY');
+               $api_key = $this->getConfigData('api_key');
                $url = $network_uri.'payments/'.$api_key.'/confirm';
-               error_log("Signature:".$api_key." Base-Url:".$network_uri." Url:".$url);
+               // error_log("Signature:".$api_key." Base-Url:".$network_uri." Url:".$url);
 
                $ch = curl_init($url);
                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -225,21 +243,24 @@ class Payment extends AbstractMethod
 
                $result = curl_exec($ch);
                $data = json_decode( $result , true);
-               error_log("data = ".var_export($data, TRUE));
+               // error_log("data = ".var_export($data, TRUE));
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($data
+               , TRUE));
 
 
                if($data['result']['isConfirmed']){
-                 error_log('Payment confirmed by jeeb');
+                 // error_log('Payment confirmed by jeeb');
                  $order->setState(Order::STATE_COMPLETE);
                  $order->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_COMPLETE));
                  $order->save();
 
                }
                else {
-                 error_log('Payment confirmation rejected by jeeb');
+                 // error_log('Payment confirmation rejected by jeeb');
                }
              }
              else if ( $json['stateId']== 5 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $order
                    ->setState(Order::STATE_CANCELED, TRUE)
                    ->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_CANCELED))
@@ -247,6 +268,7 @@ class Payment extends AbstractMethod
 
              }
              else if ( $json['stateId']== 6 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $order
                    ->setState(Order::STATE_CANCELED, TRUE)
                    ->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_CANCELED))
@@ -254,6 +276,7 @@ class Payment extends AbstractMethod
 
              }
              else if ( $json['stateId']== 7 ) {
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
                $order
                    ->setState(Order::STATE_CANCELED, TRUE)
                    ->setStatus($order->getConfig()->getStateDefaultStatus(Order::STATE_CANCELED))
@@ -261,16 +284,16 @@ class Payment extends AbstractMethod
 
              }
              else{
-               error_log('Cannot read state id sent by Jeeb');
-             }
-         }
-         }
+               // error_log('Cannot read state id sent by Jeeb');
+               \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Cannot read stateId. Response =>'. var_export($json, TRUE));
 
-     }
-}
+             }
+       }
+      }
+    }
 
 function convertIrrToBtc($url, $amount, $signature, $baseCur) {
-    error_log("Entered into Convert Base To Target");
+    // error_log("Entered into Convert Base To Target");
 
     // return Jeeb::convert_irr_to_btc($url, $amount, $signature);
     $ch = curl_init($url.'currency?'.$signature.'&value='.$amount.'&base='.$baseCur.'&target=btc');
@@ -282,11 +305,15 @@ function convertIrrToBtc($url, $amount, $signature, $baseCur) {
 
   $result = curl_exec($ch);
   $data = json_decode( $result , true);
-  error_log('Response =>'. var_export($data, TRUE));
+
+\Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($data, TRUE));
+// \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('msg to print');
+  // error_log('Response =>'. var_export($data, TRUE));
   // Return the equivalent bitcoin value acquired from Jeeb server.
   return (float) $data["result"];
 
   }
+
 
 
   function createInvoice($url, $amount, $options = array(), $signature) {
@@ -304,19 +331,25 @@ function convertIrrToBtc($url, $amount, $signature, $baseCur) {
 
       $result = curl_exec($ch);
       $data = json_decode( $result ,true );
-      error_log('Response =>'. var_export($data, TRUE));
+      \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($data, TRUE));
+
+      // error_log('Response =>'. var_export($data, TRUE));
 
       return $data['result']['token'];
 
   }
 
   function redirectPayment($url, $token) {
-    error_log("Entered into auto submit-form");
+    // error_log("Entered into auto submit-form");
     // Using Auto-submit form to redirect user with the token
+    \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Entered redirect');
+
     echo "<form id='form' method='post' action='".$url."payments/invoice'>".
             "<input type='hidden' autocomplete='off' name='token' value='".$token."'/>".
            "</form>".
            "<script type='text/javascript'>".
                 "document.getElementById('form').submit();".
            "</script>";
+
+    \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Exit redirect');
   }

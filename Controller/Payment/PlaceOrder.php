@@ -54,10 +54,31 @@ class PlaceOrder extends Action
                 'reason' => 'Order Not Found',
             )));
 
-            return;
+            // return;
         }
 
+        // $this->jeebPayment->getJeebRequest($order);
+
+        // $hello = $this->jeebPayment->getJeebRequest($order);
+        // \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'.var_export($hello, TRUE));
+        // \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'.$hello["token"]);
+        //
+        //
+        // $params = array(
+        //   'token'=> $hello["token"]
+        // );
+        // \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($params, TRUE));
+        //
+        // $this->_redirect($url."payments/invoice",$param);
+
+
         $this->getResponse()->setBody(json_encode($this->jeebPayment->getJeebRequest($order)));
+
+        // \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($hello, TRUE));
+        //
+
+        // Mage::app()->getResponse()->setRedirect($hello["url"]."payments/invoice")->sendResponse();
+        // $this->_redirectUrl($hello["url"]."payments/invoice",$params);
 
         return;
     }

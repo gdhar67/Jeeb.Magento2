@@ -36,6 +36,8 @@ class Callback extends Action
 
         $this->order = $order;
         $this->jeebPayment = $jeebPayment;
+
+        $this->execute();
     }
 
     /**
@@ -45,9 +47,12 @@ class Callback extends Action
      */
     public function execute()
     {
-        $request_order_id = (filter_input(INPUT_POST, 'order_id') ? filter_input(INPUT_POST, 'order_id') : filter_input(INPUT_GET, 'order_id'));
+        \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Entered into callback');
+        $postdata = file_get_contents("php://input");
+        $json = json_decode($postdata, true);
+        \Magento\Framework\App\ObjectManager::getInstance()->get('Psr\Log\LoggerInterface')->info('Response =>'. var_export($json, TRUE));
 
-        $order = $this->order->loadByIncrementId($request_order_id);
+        $order = $this->order->loadByIncrementId($json['orderNo']);
         $this->jeebPayment->validateJeebCallback($order);
 
         $this->getResponse()->setBody('OK');
