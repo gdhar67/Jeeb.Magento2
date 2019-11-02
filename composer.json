@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "jeeb/jeeb-php": "*"
+        "jeeb/jeeb-php": "1.0.1"
     },
     "autoload": {
         "files": [ "registration.php" ],
