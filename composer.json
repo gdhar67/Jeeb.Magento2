@@ -2,7 +2,7 @@
     "name": "jeeb/magento2-plugin",
     "type": "magento2-module",
     "description": "Cryptopayments integration for Magento 2 via Jeeb",
-    "version": "1.0.0",
+    "version": "1.1",
     "keywords": [
       "jeeb",
       "bitcoin",
